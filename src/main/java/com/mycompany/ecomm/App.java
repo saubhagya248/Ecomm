@@ -156,7 +156,7 @@ public class App extends Application {
         pass.setPromptText("Enter your password");
         Button loginButton = new Button("Login");
         Label status = new Label("Status");
-        
+        //loginButton
         loginButton.setOnAction(e -> {
             String use = user.getText();
             String pas = pass.getText();
