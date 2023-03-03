@@ -8,6 +8,7 @@ import javafx.stage.Stage;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.control.*;
+import javafx.scene.paint.Color;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.text.Text;
 import javafx.event.ActionEvent;
@@ -26,14 +27,38 @@ public class App extends Application {
     productList p = new productList();
     private static Scene scene;
     
-    private static int width = 600, height = 400, headerLine = 50;
+    private static final int width = 600;
+    private static final int height = 400;
+    private static final int headerLine = 50;
     private static Pane bodyPane;
+    private static GridPane headerBar;
+    private static GridPane footerBar;
     
     ObservableList<Product> cartItemList = FXCollections.observableArrayList();
-    Button SignInButton = new Button("Sign In");
+
     Label welcomeLabel = new Label("Welcome Customer");
     Customer loggedInCustomer = null;
     Order order = new Order();
+    
+    //headerBar buttons and fields
+        Button SignInButton = new Button("Sign In");
+        Button LogOutButton = new Button("LogOut");
+        TextField searchField = new TextField();
+        Button searchButton = new Button("search");
+        Button cart = new Button("cart");
+        Button orders = new Button("orders");
+
+
+        
+        
+    //footerBar buttons
+        Button buyNow = new Button("Buy Now");
+        Button addToCart = new Button("Add to Cart");
+
+        Button removeFromCart = new Button("Remove from Cart");
+        Button placeOrder = new Button("Place Orders from cart");
+
+
     
     
     
@@ -41,58 +66,78 @@ public class App extends Application {
         if(cartItemList.contains(product)) return;
         cartItemList.add(product);
     }
-    
+
+    private void initialState(){
+        cart.setVisible(false);
+        orders.setVisible(false);
+        LogOutButton.setVisible(false);
+        SignInButton.setVisible(true);
+        searchField.setVisible(false);
+        searchButton.setVisible(false);
+        addToCart.setVisible(false);
+        removeFromCart.setVisible(false);
+        buyNow.setVisible(false);
+        placeOrder.setVisible(false);
+        welcomeLabel.setText("Welcome Customer!");
+    }
     private GridPane headerBar(){
         GridPane header = new GridPane();
         header.setVgap(10);
         header.setHgap(10);
-        TextField searchField = new TextField();
-        searchField.setPromptText("enter text here");
-        Button searchButton = new Button("search");
-        Button cart = new Button("cart");
-        Button orders = new Button("orders");
+        searchField.setPromptText("Enter the product name");
         
         
-        searchButton.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                String str = searchField.getText();
-                bodyPane.getChildren().clear();
-                bodyPane.getChildren().add(p.getAllProducts(str));
-            }
+        Label welcome = new Label("Welcome to Ecomm");
+        //setting some nodes invisible as they will only be shown when customer will login
+        initialState();
+        
+        searchButton.setOnAction(e -> {
+            String str = searchField.getText();
+            addToCart.setVisible(true);
+            buyNow.setVisible(true);
+            bodyPane.getChildren().clear();
+            bodyPane.getChildren().add(p.getAllProducts(str));
         });
         
-        SignInButton.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                bodyPane.getChildren().clear();
-                bodyPane.getChildren().add(loginPane());
-            }
+        SignInButton.setOnAction(e -> {
+            bodyPane.getChildren().clear();
+            bodyPane.getChildren().add(loginPane());
         });
         
-        cart.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                bodyPane.getChildren().clear();
-                bodyPane.getChildren().add(p.getItemsInCart(cartItemList));
-            }
+        
+        cart.setOnAction(e -> {
+            bodyPane.getChildren().clear();
+            placeOrder.setVisible(true);
+            addToCart.setVisible(false);
+            bodyPane.getChildren().add(p.getItemsInCart(cartItemList));
         });
         
-        orders.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                bodyPane.getChildren().clear();
-                bodyPane.getChildren().add(order.getOrders(loggedInCustomer));
-            }
+        orders.setOnAction(e -> {
+            bodyPane.getChildren().clear();
+            addToCart.setVisible(false);
+            buyNow.setVisible(false);
+            bodyPane.getChildren().add(order.getOrders(loggedInCustomer));
+        });
+        
+        LogOutButton.setOnAction(e -> {
+            String name = loggedInCustomer.getName();
+            System.out.println(name);
+            Alert alert = new Alert(AlertType.INFORMATION);
+            alert.setTitle("Status");
+            alert.setContentText(name+" you are logged out successfully");
+            initialState();
+            bodyPane.getChildren().clear();
+            bodyPane.getChildren().add(loginPane());
+            loggedInCustomer = null;
         });
         
         header.setHgap(10);
-        
         header.setPadding(new Insets(10,10,10,10));
         
         header.add(searchField,0,0);
         header.add(searchButton,1,0);
         header.add(SignInButton,2,0);
+        header.add(LogOutButton,2,0);
         header.add(orders,3,0);
         header.add(cart,4,0);
         header.add(welcomeLabel,5,0);
@@ -112,19 +157,27 @@ public class App extends Application {
         Button loginButton = new Button("Login");
         Label status = new Label("Status");
         
-        loginButton.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                String use = user.getText();
-                String pas = pass.getText();
-                loggedInCustomer = Login.customerLogin(use, pas);
-                if(loggedInCustomer!=null){
-                    status.setText("Login Successfull!");
-                    welcomeLabel.setText("Welcome "+loggedInCustomer.getName()+"!");
-                }
-                else{
-                    status.setText("Login Failed!");
-                }
+        loginButton.setOnAction(e -> {
+            String use = user.getText();
+            String pas = pass.getText();
+            loggedInCustomer = Login.customerLogin(use, pas);
+            if(loggedInCustomer!=null){
+                status.setText("Login Successfull!");
+                SignInButton.setVisible(false);
+                cart.setVisible(true);
+                orders.setVisible(true);
+                LogOutButton.setVisible(true);
+                searchField.setVisible(true);
+                buyNow.setVisible(true);
+                addToCart.setVisible(true);
+                removeFromCart.setVisible(true);
+                searchButton.setVisible(true);
+                welcomeLabel.setText("Welcome "+loggedInCustomer.getName()+"!");
+                bodyPane.getChildren().clear();
+                bodyPane.getChildren().add(p.getAllProducts(""));
+            }
+            else{
+                status.setText("Login Failed!");
             }
         });
         
@@ -146,51 +199,51 @@ public class App extends Application {
     }
     
     private GridPane footerPane(){
-        Button buyNow = new Button("Buy Now");
-        Button addToCart = new Button("Add to Cart");
-        Button placeOrder = new Button("Place Orders from cart");
         
-        buyNow.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                Product product = p.getSelectedProduct();
-                boolean orderStatus = false;
-                if(product!=null && loggedInCustomer!=null){
-                    orderStatus = order.placeOrder(loggedInCustomer, product);                    
-                }
-                
-                if(orderStatus){
-                    showDialog("Successful!");
-                }
-                else{
-                    showDialog("Failed!");
-                }
+        buyNow.setVisible(false);
+        placeOrder.setVisible(false);
+        addToCart.setVisible(false);
+        removeFromCart.setVisible(false);
+
+        
+        buyNow.setOnAction(e -> {
+            Product product = p.getSelectedProduct();
+            boolean orderStatus = false;
+            if(product!=null && loggedInCustomer!=null){
+                orderStatus = order.placeOrder(loggedInCustomer, product);
+            }
+
+            if(orderStatus){
+                showDialog("Successful!");
+            }
+            else{
+                showDialog("Failed!");
             }
         });
         
-        placeOrder.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                int orderCount = 0;
-                if(!cartItemList.isEmpty() && loggedInCustomer!=null){
-                    orderCount = order.placeMultipleOrders(cartItemList, loggedInCustomer);
-                }
-                
-                if(orderCount>0){
-                    showDialog(orderCount+"orders placed successfully!");
-                }
-                else{
-                    showDialog("Failed!");
-                }
+        placeOrder.setOnAction(e -> {
+            int orderCount = 0;
+            if(!cartItemList.isEmpty() && loggedInCustomer!=null){
+                orderCount = order.placeMultipleOrders(cartItemList, loggedInCustomer);
+            }
+
+            if(orderCount>0){
+                showDialog(orderCount+"orders placed successfully!");
+            }
+            else{
+                showDialog("Failed!");
             }
         });
         
-        addToCart.setOnAction(new EventHandler<ActionEvent>(){
-            @Override
-            public void handle(ActionEvent e){
-                Product product = p.getSelectedProduct();
-                addItemsToCart(product);
-            }
+        addToCart.setOnAction(e -> {
+            removeFromCart.setVisible(true);
+            Product product = p.getSelectedProduct();
+            addItemsToCart(product);
+        });
+
+        removeFromCart.setOnAction(e -> {
+            Product sel = p.getSelectedProduct();
+            cartItemList.remove(sel);
         });
         GridPane footer = new GridPane();
         
@@ -200,7 +253,8 @@ public class App extends Application {
         footer.setTranslateY(height+headerLine);
         footer.add(buyNow, 0, 0);
         footer.add(addToCart,1,0);
-        footer.add(placeOrder,2,0);
+        footer.add(removeFromCart,2,0);
+        footer.add(placeOrder,3,0);
         return footer;
     }
     
@@ -215,15 +269,19 @@ public class App extends Application {
     private Pane createContent(){
         Pane root = new Pane();
         root.setPrefSize(width, height+2*headerLine);
+        headerBar = new GridPane();
+        headerBar.getChildren().add(headerBar());
+
+        footerBar = new GridPane();
+        footerBar.getChildren().add(footerPane());
         
         bodyPane = new Pane();
         bodyPane.setPrefSize(width, height);
         bodyPane.setTranslateY(headerLine);
         bodyPane.setTranslateX(10);
-        
         bodyPane.getChildren().add(loginPane());
         
-        root.getChildren().addAll(headerBar(), bodyPane, footerPane());
+        root.getChildren().addAll(headerBar, bodyPane, footerBar);
         return root;
     }
 
